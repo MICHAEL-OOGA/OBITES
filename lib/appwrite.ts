@@ -1,4 +1,4 @@
-import { CreateUserParams, SignInParams } from "@/type";
+import { CreateUserParams, GetMenuParams, SignInParams } from "@/type";
 import {
   Account,
   Avatars,
@@ -6,6 +6,7 @@ import {
   Databases,
   ID,
   Query,
+  Storage,
 } from "react-native-appwrite";
 
 export const appwriteConfig = {
@@ -13,19 +14,24 @@ export const appwriteConfig = {
   Platform: "com.oogaindustries.obites",
   projectId: process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID!,
   databaseId: "687941c0002677fc7849",
+  bucketId: "688accc400065b53b541",
   userCollectionId: "687942e4001e76b21a6a",
+  categoriesCollectionId: "688a60e500360f3499df",
+  menuCollectionId: "688a62b4003d6f96dd78",
+  customizationsCollectionsId: "688a6826002f5cd1fc6e",
+  menuCustomizationCollectionId: "688ac8ed002b948a6bcc",
 };
 
-export const client = new Client(); // starting up with Appwrite
+export const client = new Client();
 
 client
-
   .setEndpoint(appwriteConfig.endpoint)
   .setProject(appwriteConfig.projectId)
   .setPlatform(appwriteConfig.Platform);
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+export const storage = new Storage(client);
 const avatars = new Avatars(client);
 
 export const createUser = async ({
@@ -37,7 +43,7 @@ export const createUser = async ({
     const newAccount = await account.create(ID.unique(), email, password, name);
     if (!newAccount) throw Error;
 
-    await signIn({ email, password }); //separate signIn function that we must create (created down below).
+    await signIn({ email, password });
 
     const avatarUrl = avatars.getInitialsURL(name);
 
@@ -45,12 +51,7 @@ export const createUser = async ({
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
       ID.unique(),
-      {
-        accountId: newAccount.$id,
-        email,
-        name,
-        avatar: avatarUrl,
-      }
+      { email, name, accountId: newAccount.$id, avatar: avatarUrl }
     );
   } catch (e) {
     throw new Error(e as string);
@@ -79,16 +80,40 @@ export const getCurrentUser = async () => {
     if (!currentUser) throw Error;
 
     return currentUser.documents[0];
-  } catch (error) {
-    console.log(error);
-    throw new Error(error as string);
+  } catch (e) {
+    console.log(e);
+    throw new Error(e as string);
   }
 };
 
+export const getMenu = async ({ category, query }: GetMenuParams) => {
+  try {
+    const queries: string[] = [];
 
+    if (category) queries.push(Query.equal("categories", category));
+    if (query) queries.push(Query.search("name", query));
 
+    const menus = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.menuCollectionId,
+      queries
+    );
 
+    return menus.documents;
+  } catch (e) {
+    throw new Error(e as string);
+  }
+};
 
+export const getCategories = async () => {
+  try {
+    const categories = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.categoriesCollectionId
+    );
 
-
-
+    return categories.documents;
+  } catch (e) {
+    throw new Error(e as string);
+  }
+};

@@ -12,7 +12,7 @@ import logout from "@/assets/icons/logout.png";
 import minus from "@/assets/icons/minus.png";
 import pencil from "@/assets/icons/pencil.png";
 import person from "@/assets/icons/person.png";
-import phone from "@/assets/icons/phone.png";
+import phone from "@/assets/icons/phone.png";      
 import plus from "@/assets/icons/plus.png";
 import search from "@/assets/icons/search.png";
 import star from "@/assets/icons/star.png";
